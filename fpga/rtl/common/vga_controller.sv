@@ -21,7 +21,7 @@ module vga_controller (
     assign drawY = vc;
     assign active_nblank = display;
 
-    always_ff @(posedge pixel_clk or posedge reset) begin : counter_proc
+    always_ff @(posedge pixel_clk) begin : counter_proc
         if (reset) begin
             hc <= 10'b0000000000;
             vc <= 10'b0000000000;
@@ -37,7 +37,7 @@ module vga_controller (
         end
     end
 
-    always_ff @(posedge pixel_clk or posedge reset) begin : hsync_proc
+    always_ff @(posedge pixel_clk) begin : hsync_proc
         if (reset) begin
             hs <= 1'b0;
         end else if (((hc + 10'b0000000001) >= 10'b1010010000) &&
@@ -48,7 +48,7 @@ module vga_controller (
         end
     end
 
-    always_ff @(posedge pixel_clk or posedge reset) begin : vsync_proc
+    always_ff @(posedge pixel_clk) begin : vsync_proc
         if (reset) begin
             vs <= 1'b0;
         end else if (((vc + 10'b0000000001) == 10'b0111101010) ||

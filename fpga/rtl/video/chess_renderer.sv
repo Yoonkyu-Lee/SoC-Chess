@@ -25,13 +25,17 @@ module chess_renderer (
 
     logic [2:0] curr_state;
     logic [3:0] board[63:0];
+    logic [3:0] board_vga[63:0];
     logic [3:0] piece_change;
     logic [5:0] piece_board_addr;
     logic [5:0] hovered_val;
     logic [5:0] pre_sel_val;
+    logic [5:0] pre_sel_val_vga;
     logic [5:0] active_square;
     logic [3:0] x_index;
     logic [3:0] y_index;
+    logic       highlight_border_vga;
+    logic       curr_player_vga;
 
     logic [3:0] cb_red, cb_green, cb_blue;
     logic [3:0] b_bishop_red, b_bishop_green, b_bishop_blue;
@@ -53,6 +57,7 @@ module chess_renderer (
     int cursor_radius;
     integer i;
     integer j;
+    integer k;
 
     function automatic logic is_piece_pixel(
         input logic [3:0] sprite_red,
@@ -279,6 +284,17 @@ module chess_renderer (
         end
     end
 
+    // Snapshot game-state registers into the video clock domain before color generation.
+    always_ff @(posedge vga_clk) begin
+        for (k = 0; k < 64; k++) begin
+            board_vga[k] <= board[k];
+        end
+
+        pre_sel_val_vga <= pre_sel_val;
+        highlight_border_vga <= highlight_border;
+        curr_player_vga <= curr_player;
+    end
+
     always_comb begin : cursor_on_proc
         ball_on = ((dist_x * dist_x) + (dist_y * dist_y)) <= (cursor_radius * cursor_radius);
     end
@@ -289,68 +305,68 @@ module chess_renderer (
             Green = 4'h7;
             Blue = 4'h0;
         end else if ((DrawX < 10'd480) && (DrawY < 10'd480)) begin
-            if ((active_square == pre_sel_val) &&
-                highlight_border &&
+            if ((active_square == pre_sel_val_vga) &&
+                highlight_border_vga &&
                 is_border_pixel(s_border_red, s_border_green, s_border_blue)) begin
                 Red = s_border_red;
                 Green = s_border_green;
                 Blue = s_border_blue;
-            end else if ((board[active_square] == 4'b0001) &&
+            end else if ((board_vga[active_square] == 4'b0001) &&
                          is_piece_pixel(w_pawn_red, w_pawn_green, w_pawn_blue)) begin
                 Red = w_pawn_red;
                 Green = w_pawn_green;
                 Blue = w_pawn_blue;
-            end else if ((board[active_square] == 4'b0010) &&
+            end else if ((board_vga[active_square] == 4'b0010) &&
                          is_piece_pixel(w_knight_red, w_knight_green, w_knight_blue)) begin
                 Red = w_knight_red;
                 Green = w_knight_green;
                 Blue = w_knight_blue;
-            end else if ((board[active_square] == 4'b0011) &&
+            end else if ((board_vga[active_square] == 4'b0011) &&
                          is_piece_pixel(w_bishop_red, w_bishop_green, w_bishop_blue)) begin
                 Red = w_bishop_red;
                 Green = w_bishop_green;
                 Blue = w_bishop_blue;
-            end else if ((board[active_square] == 4'b0100) &&
+            end else if ((board_vga[active_square] == 4'b0100) &&
                          is_piece_pixel(w_rook_red, w_rook_green, w_rook_blue)) begin
                 Red = w_rook_red;
                 Green = w_rook_green;
                 Blue = w_rook_blue;
-            end else if ((board[active_square] == 4'b0101) &&
+            end else if ((board_vga[active_square] == 4'b0101) &&
                          is_piece_pixel(w_queen_red, w_queen_green, w_queen_blue)) begin
                 Red = w_queen_red;
                 Green = w_queen_green;
                 Blue = w_queen_blue;
-            end else if ((board[active_square] == 4'b0110) &&
+            end else if ((board_vga[active_square] == 4'b0110) &&
                          is_piece_pixel(w_king_red, w_king_green, w_king_blue)) begin
                 Red = w_king_red;
                 Green = w_king_green;
                 Blue = w_king_blue;
-            end else if ((board[active_square] == 4'b1001) &&
+            end else if ((board_vga[active_square] == 4'b1001) &&
                          is_piece_pixel(b_pawn_red, b_pawn_green, b_pawn_blue)) begin
                 Red = b_pawn_red;
                 Green = b_pawn_green;
                 Blue = b_pawn_blue;
-            end else if ((board[active_square] == 4'b1010) &&
+            end else if ((board_vga[active_square] == 4'b1010) &&
                          is_piece_pixel(b_knight_red, b_knight_green, b_knight_blue)) begin
                 Red = b_knight_red;
                 Green = b_knight_green;
                 Blue = b_knight_blue;
-            end else if ((board[active_square] == 4'b1011) &&
+            end else if ((board_vga[active_square] == 4'b1011) &&
                          is_piece_pixel(b_bishop_red, b_bishop_green, b_bishop_blue)) begin
                 Red = b_bishop_red;
                 Green = b_bishop_green;
                 Blue = b_bishop_blue;
-            end else if ((board[active_square] == 4'b1100) &&
+            end else if ((board_vga[active_square] == 4'b1100) &&
                          is_piece_pixel(b_rook_red, b_rook_green, b_rook_blue)) begin
                 Red = b_rook_red;
                 Green = b_rook_green;
                 Blue = b_rook_blue;
-            end else if ((board[active_square] == 4'b1101) &&
+            end else if ((board_vga[active_square] == 4'b1101) &&
                          is_piece_pixel(b_queen_red, b_queen_green, b_queen_blue)) begin
                 Red = b_queen_red;
                 Green = b_queen_green;
                 Blue = b_queen_blue;
-            end else if ((board[active_square] == 4'b1110) &&
+            end else if ((board_vga[active_square] == 4'b1110) &&
                          is_piece_pixel(b_king_red, b_king_green, b_king_blue)) begin
                 Red = b_king_red;
                 Green = b_king_green;
@@ -360,11 +376,11 @@ module chess_renderer (
                 Green = cb_green;
                 Blue = cb_blue;
             end
-        end else if ((curr_player == 1'b0) && (DrawY > 10'd420)) begin
+        end else if ((curr_player_vga == 1'b0) && (DrawY > 10'd420)) begin
             Red = 4'h0;
             Green = 4'h0;
             Blue = 4'hF;
-        end else if ((curr_player == 1'b1) && (DrawY < 10'd60)) begin
+        end else if ((curr_player_vga == 1'b1) && (DrawY < 10'd60)) begin
             Red = 4'h0;
             Green = 4'h0;
             Blue = 4'hF;

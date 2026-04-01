@@ -1,5 +1,8 @@
 create_clock -period 10.000 -name clk_100 -waveform {0.000 5.000} [get_ports Clk]
 
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 3.3 [current_design]
+
 set_property IOSTANDARD LVCMOS33 [get_ports Clk]
 set_property IOSTANDARD LVCMOS25 [get_ports reset_rtl_0]
 set_property IOSTANDARD LVCMOS33 [get_ports uart_rtl_0_rxd]

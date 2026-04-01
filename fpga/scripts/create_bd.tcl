@@ -6,8 +6,7 @@ proc create_soc_chess_bd {design_name} {
     create_bd_design $design_name
     current_bd_design $design_name
 
-    set clk_100MHz [create_bd_port -dir I -type clk clk_100MHz]
-    set_property -dict [list CONFIG.FREQ_HZ {100000000}] $clk_100MHz
+    set clk_100MHz [create_bd_port -dir I -type clk -freq_hz 100000000 clk_100MHz]
 
     set reset_rtl_0 [create_bd_port -dir I -type rst reset_rtl_0]
     set_property -dict [list CONFIG.POLARITY {ACTIVE_LOW}] $reset_rtl_0
@@ -17,12 +16,11 @@ proc create_soc_chess_bd {design_name} {
     set usb_spi_sclk [create_bd_port -dir O usb_spi_sclk]
     set usb_spi_ss   [create_bd_port -dir O -from 0 -to 0 usb_spi_ss]
 
-    set uart_rxd [create_bd_port -dir I uart_rtl_0_rxd]
-    set uart_txd [create_bd_port -dir O uart_rtl_0_txd]
-    set usb_int  [create_bd_port -dir I -from 0 -to 0 gpio_usb_int_tri_i]
-    set usb_rst  [create_bd_port -dir O -from 0 -to 0 gpio_usb_rst_tri_o]
-    set usb_keycode_0 [create_bd_port -dir O -from 31 -to 0 gpio_usb_keycode_0_tri_o]
-    set usb_keycode_1 [create_bd_port -dir O -from 31 -to 0 gpio_usb_keycode_1_tri_o]
+    create_bd_intf_port -mode Master -vlnv xilinx.com:interface:uart_rtl:1.0 uart_rtl_0
+    create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gpio_rtl:1.0 gpio_usb_int
+    create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gpio_rtl:1.0 gpio_usb_rst
+    create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gpio_rtl:1.0 gpio_usb_keycode_0
+    create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gpio_rtl:1.0 gpio_usb_keycode_1
 
     create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze:11.0 microblaze_0
     set_property -dict [list \
@@ -75,7 +73,9 @@ proc create_soc_chess_bd {design_name} {
     connect_bd_net $reset_rtl_0 [get_bd_pins system_reset/ext_reset_in]
 
     connect_bd_net [get_bd_pins system_reset/mb_reset] [get_bd_pins microblaze_0/Reset]
-    connect_bd_net [get_bd_pins axi_interrupt_controller/interrupt] [get_bd_pins microblaze_0/INTERRUPT]
+    connect_bd_net [get_bd_pins system_clock/clk_out1] [get_bd_pins axi_interrupt_controller/processor_clk]
+    connect_bd_net [get_bd_pins system_reset/mb_reset] [get_bd_pins axi_interrupt_controller/processor_rst]
+    connect_bd_net [get_bd_pins axi_interrupt_controller/irq] [get_bd_pins microblaze_0/INTERRUPT]
     connect_bd_net [get_bd_pins interrupt_concat/dout] [get_bd_pins axi_interrupt_controller/intr]
 
     connect_bd_net [get_bd_pins debug_uart/interrupt] [get_bd_pins interrupt_concat/In0]
@@ -83,13 +83,11 @@ proc create_soc_chess_bd {design_name} {
     connect_bd_net [get_bd_pins usb_timer/interrupt] [get_bd_pins interrupt_concat/In2]
     connect_bd_net [get_bd_pins usb_spi/ip2intc_irpt] [get_bd_pins interrupt_concat/In3]
 
-    connect_bd_net $uart_rxd [get_bd_pins debug_uart/rx]
-    connect_bd_net $uart_txd [get_bd_pins debug_uart/tx]
-
-    connect_bd_net $usb_int [get_bd_pins usb_interrupt_gpio/gpio_io_i]
-    connect_bd_net $usb_rst [get_bd_pins usb_reset_gpio/gpio_io_o]
-    connect_bd_net $usb_keycode_0 [get_bd_pins usb_keycode_gpio/gpio_io_o]
-    connect_bd_net $usb_keycode_1 [get_bd_pins usb_keycode_gpio/gpio2_io_o]
+    connect_bd_intf_net [get_bd_intf_ports uart_rtl_0] [get_bd_intf_pins debug_uart/UART]
+    connect_bd_intf_net [get_bd_intf_ports gpio_usb_int] [get_bd_intf_pins usb_interrupt_gpio/GPIO]
+    connect_bd_intf_net [get_bd_intf_ports gpio_usb_rst] [get_bd_intf_pins usb_reset_gpio/GPIO]
+    connect_bd_intf_net [get_bd_intf_ports gpio_usb_keycode_0] [get_bd_intf_pins usb_keycode_gpio/GPIO]
+    connect_bd_intf_net [get_bd_intf_ports gpio_usb_keycode_1] [get_bd_intf_pins usb_keycode_gpio/GPIO2]
 
     connect_bd_net $usb_spi_miso [get_bd_pins usb_spi/io1_i]
     connect_bd_net $usb_spi_mosi [get_bd_pins usb_spi/io0_o]
@@ -111,4 +109,3 @@ proc create_soc_chess_bd {design_name} {
     validate_bd_design
     save_bd_design
 }
-

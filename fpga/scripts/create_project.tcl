@@ -5,16 +5,20 @@ set project_name soc_chess_fpga
 set project_dir [file join $build_root $project_name]
 set project_part xc7s50csga324-1
 
+proc vivado_path {path} {
+    return [string map {\\ /} [file normalize $path]]
+}
+
 proc add_if_exists {path} {
     if {![file exists $path]} {
         error "Expected file does not exist: $path"
     }
-    add_files -norecurse $path
+    add_files -norecurse [list [vivado_path $path]]
 }
 
 proc add_globbed_files {pattern} {
     foreach path [lsort [glob -nocomplain $pattern]] {
-        add_files -norecurse $path
+        add_files -norecurse [list [vivado_path $path]]
     }
 }
 
@@ -28,7 +32,7 @@ proc create_sprite_rom {module_name coe_path depth} {
         CONFIG.Memory_Type {Single_Port_ROM} \
         CONFIG.Enable_A {Always_Enabled} \
         CONFIG.Load_Init_File {true} \
-        CONFIG.Coe_File $coe_path \
+        CONFIG.Coe_File [vivado_path $coe_path] \
         CONFIG.Write_Width_A {3} \
         CONFIG.Read_Width_A {3} \
         CONFIG.Write_Depth_A $depth \
@@ -57,8 +61,8 @@ add_if_exists [file join $repo_root fpga constraints soc_chess_top.xdc]
 create_ip -name clk_wiz -vendor xilinx.com -library ip -version 6.0 -module_name clk_wiz_0
 set_property -dict [list \
     CONFIG.PRIM_IN_FREQ {100.000} \
-    CONFIG.NUM_OUT_CLKS {2} \
     CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {25.000} \
+    CONFIG.CLKOUT2_USED {true} \
     CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {125.000} \
     CONFIG.USE_LOCKED {true} \
     CONFIG.USE_RESET {true} \
