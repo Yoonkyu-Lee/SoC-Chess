@@ -288,7 +288,7 @@ module chess_renderer (
             Red = 4'hF;
             Green = 4'h7;
             Blue = 4'h0;
-        end else if (DrawX < 10'd480) begin
+        end else if ((DrawX < 10'd480) && (DrawY < 10'd480)) begin
             if ((active_square == pre_sel_val) &&
                 highlight_border &&
                 is_border_pixel(s_border_red, s_border_green, s_border_blue)) begin
