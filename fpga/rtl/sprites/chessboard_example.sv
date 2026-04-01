@@ -9,15 +9,19 @@ logic [17:0] rom_address;
 logic [2:0] rom_q;
 
 logic [3:0] palette_red, palette_green, palette_blue;
+logic [9:0] scaled_x;
+logic [17:0] row_offset;
 
 logic negedge_vga_clk;
 
 // read from ROM on negedge, set pixel on posedge
 assign negedge_vga_clk = ~vga_clk;
 
-// address into the rom = (x*xDim)/640 + ((y*yDim)/480) * xDim
-// this will stretch out the sprite across the entire screen
-assign rom_address = ((DrawX * 480) / 640) + (((DrawY * 480) / 480) * 480);
+// Scale the 640x480 scan position into the 480x480 chessboard texture.
+// Using shift/add math here avoids the wide multiply/divide chain that hurt timing.
+assign scaled_x = ((DrawX << 1) + DrawX) >> 2;
+assign row_offset = ({DrawY, 9'b0}) - ({DrawY, 5'b0}); // DrawY * (512 - 32) = DrawY * 480
+assign rom_address = row_offset + scaled_x;
 
 always_ff @ (posedge vga_clk) begin
 	red <= 4'h0;
