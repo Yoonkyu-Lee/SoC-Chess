@@ -72,9 +72,3 @@ This refactor was implemented without a connected FPGA board, and Vivado/Vitis a
 - optional xsim smoke simulations for cursor motion and chess state updates
 
 The intended validation sequence is documented in [docs/architecture/usb-to-video-pipeline.md](/c:/Users/yoong/Desktop/Library/Personal%20Project/SoC-Chess/docs/architecture/usb-to-video-pipeline.md).
-
-## Publishing Notes
-
-- Legacy directories such as `_backup_copy/`, `_doc/`, and the old tool-generated workspace trees are ignored and are not part of the clean source story.
-- Third-party licensing details are summarized in [THIRD_PARTY_NOTICES.md](/c:/Users/yoong/Desktop/Library/Personal%20Project/SoC-Chess/THIRD_PARTY_NOTICES.md).
-- Before making the repository fully public, verify or replace the `lw_usb` stack because the copied files do not include an explicit license in the local source snapshot.
